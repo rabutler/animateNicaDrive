@@ -8,20 +8,22 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
   width <- height <- 5
   
   # start by reading in the driving route data from KML files
-  r1 <- maptools::getKMLcoordinates('data/DrivingRoute1.kml',TRUE)
+  r1 <- maptools::getKMLcoordinates('data/DrivingRoute1.kml', TRUE)
   r1 <- as.data.frame(r1[[1]])
   
   # kml files to read in, in the order they should be read in
   kmlFiles <- paste0(c('DrivingRoute2', 'Ferry', paste0('DrivingRoute',3:6)),'.kml')
+  #kmlFiles <- c('DrivingRoute2.kml','Ferry.kml','DrivingRoute3.kml','DrivingRoute4.kml','DrivingRoute5.kml','DrivingRoute6.kml')
   for(i in 1:length(kmlFiles)){
     
     kmlData <- maptools::getKMLcoordinates(paste0('data/',kmlFiles[i]),TRUE)
     kmlData <- as.data.frame(kmlData[[1]])
+    kmlData <- kmlData[seq(1,nrow(kmlData),2),] # grab every other point to reduce size
     r1 <- rbind(r1,kmlData)
   }
+  rm(kmlData)
   
   names(r1) <- c('long','lat')
-  rm(kmlData)
   
   epsg_code <- '+init=epsg:3479'
   #simp_tol <- 7000
@@ -65,7 +67,7 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
   plot(driveLineJ,col = 'red') 
   plot(bgMap, col = 'black', add = T, border = 'grey50')
   # redundant, but gets it to be the last layer and appear on top
-  plot(driveLineJ, col = 'red', add = T, lwd = 2.5) 
+  plot(driveLineJ, col = 'steelblue3', add = T, lwd = 2.5) 
     
   if(saveSVG) dev.off()
   
