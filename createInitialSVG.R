@@ -3,7 +3,7 @@ library(magrittr)
 library(maps)
 
 # create the initial svg file from kml data, and add background map
-createInitialSVG <- function(svgFile = 'driveRoute.svg')
+createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
 {
   width <- height <- 5
   
@@ -37,7 +37,7 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg')
   
   # states together
   # it still creates a seperate path for each state, but makes the R code easier.
-  ss <- map('state',c('colorado','new mexico','arizona','california'),plot = F, fill = T, col = 'blue')
+  ss <- map('state',c('colorado','new mexico','arizona','utah','nevada','california','texas'), plot = F,fill = T)
   id1 <- sapply(strsplit(ss$names, ":"), function(x) x[1])
   ssSp <- maptools::map2SpatialPolygons(ss, IDs=id1, proj4string=CRS(myProj)) %>%
     spTransform(CRS(epsg_code)) 
@@ -50,14 +50,17 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg')
   ssMx <- maptools::map2SpatialPolygons(mx, IDs=idMx, proj4string=CRS(myProj)) %>%
     spTransform(CRS(epsg_code))
   
+  bgMap <- rbind(ssMx, ssSp) #rbind combines polygons for spatialPolygons
+  
   # add them all to the svg
-  svg(filename = svgFile,width=width, height=height)
-    # *** for now adding the route first uses the algorithm in sp.plot to figure out 
-    # *** the extents. But it means that initial the line will be hidden behind the states
-    plot(driveLineJ,col = 'red') 
-    plot(ssSp, col = 'blue',add = T)
-    plot(ssMx, col = 'blue',add = T)
+  if(saveSVG) svg(filename = svgFile,width=width, height=height)
+  # *** for now adding the route first uses the algorithm in sp.plot to figure out 
+  # *** the extents. But it means that initial the line will be hidden behind the states
+  plot(driveLineJ,col = 'red') 
+  plot(bgMap, col = 'black', add = T, border = 'grey50')
+  # redundant, but gets it to be the last layer and appear on top
+  plot(driveLineJ, col = 'red', add = T, lwd = 2.5) 
     
-  dev.off()
+  if(saveSVG) dev.off()
   
 }

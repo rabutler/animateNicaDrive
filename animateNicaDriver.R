@@ -12,16 +12,15 @@ createInitialSVG()
 svgFile <- 'driveRoute.svg'
 svg <-  XML::xmlParse(svgFile, useInternalNode=TRUE)
 numPaths <- length(XML::xpathApply(svg, "//*[local-name()='path']"))
-pathNames <- paste0('myPath',1:numPaths)
+
+# in the svg, the last path is the path I want to animate. call all of the oher paths,
+# myPath[n], and the last path 'drivePath'
+pathNames <- c(paste0('myPath',1:(numPaths-1)),'drivePath')
 keepAtts <- c('d','style')
 
 svg <- #clean_svg_doc(svg) %>%
   name_svg_elements(svg, ele_names = pathNames, keep.attrs = keepAtts) %>% 
   toString.XMLNode()
 
-cat(svg, file = 'driverRouteEdit.svg', append = FALSE)
-
-# write out SVG;
-# using svglite package does not allow fine enough control of the types of elements
-# or adding specific class and ids
-
+OFolder <- '~/rabutler.github.io/images/'
+cat(svg, file = paste0(OFolder,svgFile), append = FALSE)
