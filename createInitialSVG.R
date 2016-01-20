@@ -8,14 +8,20 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
   width <- height <- 5
   
   # start by reading in the driving route data from KML files
-  d1 <- maptools::getKMLcoordinates('data/DrivingRoute1.kml',TRUE)
-  d2 <- maptools::getKMLcoordinates('data/DrivingRoute2.kml',TRUE)
+  r1 <- maptools::getKMLcoordinates('data/DrivingRoute1.kml',TRUE)
+  r1 <- as.data.frame(r1[[1]])
   
-  r1 <- as.data.frame(d1[[1]])
-  r2 <- as.data.frame(d2[[1]])
-  r1 <- rbind(r1,r2)
+  # kml files to read in, in the order they should be read in
+  kmlFiles <- paste0(c('DrivingRoute2', 'Ferry', paste0('DrivingRoute',3:6)),'.kml')
+  for(i in 1:length(kmlFiles)){
+    
+    kmlData <- maptools::getKMLcoordinates(paste0('data/',kmlFiles[i]),TRUE)
+    kmlData <- as.data.frame(kmlData[[1]])
+    r1 <- rbind(r1,kmlData)
+  }
+  
   names(r1) <- c('long','lat')
-  rm(d1,d2,r2)
+  rm(kmlData)
   
   epsg_code <- '+init=epsg:3479'
   #simp_tol <- 7000
@@ -45,7 +51,7 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
   # *** No idea why you have to have fill = T, but it won't work if fill = F
   # the choice of color really doesn't matter as the color will be set in the future when we 
   # pass it to plot()
-  mx <- map('world','mexico',plot = F, fill = T, col = 'black')
+  mx <- map('world',c('mexico','guatemala','nicaragua','el salvador','honduras','belize'),plot = F, fill = T, col = 'black')
   idMx <- sapply(strsplit(mx$names, ":"), function(x) x[1])
   ssMx <- maptools::map2SpatialPolygons(mx, IDs=idMx, proj4string=CRS(myProj)) %>%
     spTransform(CRS(epsg_code))
