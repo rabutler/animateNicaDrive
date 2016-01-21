@@ -12,3 +12,9 @@ states_sp <- map2SpatialPolygons(states, IDs=IDs,proj4string=CRS(myProj))
 
 # selecting svg inside of object tags:
 # https://benfrain.com/selecting-svg-inside-tags-with-javascript/
+
+# using the lambert conformal conic:
+# http://www.georeference.org/doc/lambert_conformal_conic.htm
+
+# defaults from maps
+# http://stackoverflow.com/questions/26062280/converting-a-map-object-to-a-spatialpolygon-object
