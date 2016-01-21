@@ -2,6 +2,7 @@
 *.RProj.user
 .RData
 .Rhistory
+scratch.R
 
 ex/
 
