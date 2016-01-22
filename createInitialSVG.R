@@ -5,24 +5,16 @@ library(maps)
 library(rgeos) # only need if using gSimplify
 
 # create the initial svg file from kml data, and add background map
-createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
+createInitialSVG <- function(svgFile = 'driveRoute.svg')
 {
   width <- height <- 8 # inches
   
-  # start by reading in the driving route data from KML files
-  r1 <- maptools::getKMLcoordinates('data/DrivingRoute1.kml', TRUE)
-  r1 <- as.data.frame(r1[[1]])
-  
   # kml files to read in, in the order they should be read in
-  kmlFiles <- paste0(c('DrivingRoute2', 'Ferry', paste0('DrivingRoute',3:6)),'.kml')
-  for(i in 1:length(kmlFiles)){
-    
-    kmlData <- maptools::getKMLcoordinates(paste0('data/',kmlFiles[i]),TRUE)
-    kmlData <- as.data.frame(kmlData[[1]])
-    #kmlData <- kmlData[seq(1,nrow(kmlData),2),] # grab every other point to reduce size
-    r1 <- rbind(r1,kmlData)
-  }
-  rm(kmlData)
+  kmlFiles <- paste0(c('DrivingRoute1','DrivingRoute2', 'Ferry', paste0('DrivingRoute',3:6)),'.kml')
+  
+  # read in all the kml data, get coordinates, and bind together for all files
+  r1 <- do.call(rbind, lapply(kmlFiles, function(x) 
+    as.data.frame(maptools::getKMLcoordinates(paste0('data/',x),TRUE)[[1]])))
   
   names(r1) <- c('long','lat')
   
@@ -36,16 +28,12 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
   
   
   # create spatial lines from the kml data
-  driveLine <- Line(r1)
-  driveLines <- Lines(list(driveLine), ID='drive-line')
-  # driveLines is over 2MB at this point
-  driveLineJ <- SpatialLines(list(driveLines), proj4string = defProj) %>% 
-    spTransform(myProj) %>%
-    rgeos::gSimplify(tol = 500) # arbitrarily chosen tolerance, but important; if you don't
-                          # do the gSimplify, then the path appears jerky in some areas
-  
-  rm(driveLine, driveLines)
-  
+  driveLine <- sp::Line(r1) %>% list() %>% sp::Lines(ID='drive-line') %>%
+    list() %>% sp::SpatialLines(proj4string = defProj) %>% 
+    sp::spTransform(myProj) %>%
+    rgeos::gSimplify(tol = 500) # arbitrarily chosen tolerance but important; if you don't
+                                # do the gSimplify, then the path appears jerky in some areas
+
   # now add background map of states and countries we drove through
   
   # states
@@ -65,11 +53,11 @@ createInitialSVG <- function(svgFile = 'driveRoute.svg', saveSVG = T)
   bgMap <- rbind(ssSt, ssMx) # rbind combines polygons for spatialPolygons
   
   # add them all to the svg
-  if(saveSVG) svg(filename = svgFile,width=width, height=height)
+  svg(filename = svgFile,width=width, height=height)
   par(mar = rep(0,4)) # remove margins
   plot(bgMap, col = 'grey15', border = 'grey50')
-  plot(driveLineJ, col = 'steelblue3', add = T, lwd = 2.75) 
+  plot(driveLine, col = 'steelblue3', add = T, lwd = 2.75) 
     
-  if(saveSVG) dev.off()
+  dev.off()
   
 }
