@@ -5,23 +5,24 @@ date: "January 21, 2016"
 output: html_document
 ---
 
-For some time, I have wanted to take the route we took from Colorado to Nicaragua, and animate it. I was inspired to do so from the animation of the [Colorado River in this recent visualization project](https://www.doi.gov/water/owdi.cr.drought/en/#Shortage]). Of course, I decided I wanted to complete this task using R. As I completed the animation, it seemed as thought there are two, somewhat separate, parts to the project: (1) creating an SVG of the map in R and (2) using R, and JavaScript, to animate the driving route. As such, I have split the posts into two parts. Part 1 focuses on making the map, while Part 2 focuses on how to animate one of the paths in the SVG. 
+For some time, I have wanted to take the route we drove from Colorado to Nicaragua, and animate it. I was inspired to do so from the animation of the [Colorado River in this recent visualization project](https://www.doi.gov/water/owdi.cr.drought/en/#Shortage]). Since this project provided the inspiration, I copied their approach and created an animated an SVG. As I completed the animation, it seemed as thought there are two, somewhat separate, parts to the project: (1) creating an SVG of the map in R and (2) using R, and JavaScript, to animate the driving route. As such, I have split the posts into two parts. Part 1 focuses on making the map, while Part 2 focuses on how to animate the driving in the SVG. 
 
-In Part 1, I use a combination of KML data from Google Maps, and the maps package to create an SVG that I can later animate.
+In Part 1, we combine KML data from Google Maps with the maps package to create an SVG that I can later animate.
 
 ## Why?
 
-As stated above, the overall goal is to animate the route we took while driving from Colorado to Nicaragua. Though, as Part 1 focuses on making the map, there are a myriad of reasons one might need to combine KML with existing base maps in R.
+As stated above, the overall goal is to animate the route we took while driving from Colorado to Nicaragua. Though, as Part 1 focuses on making the map, there are a myriad of reasons one might need to combine KML data with existing base maps in R.
 
 ## How?
 
 In a nutshell, we:
-1. Exported the driving route we took from an existing Google Map of the route as a KML file.
-2. Read the KML file into R, and converted it to a spatial line. 
-3. Created the background map.
-4. Transformed to an appropriate projection.
-5. Styled the map.
-6. Saved as an SVG.
+
+1. Export the driving route we took from an existing Google Map as KML files.
+2. Read the KML files into R, and convert it to a spatial line. 
+3. Creat the background map.
+4. Transform the map and route to an appropriate projection.
+5. Style the map.
+6. Save as an SVG.
 
 For this, we load the following packages:
 ```{r, warning=FALSE, message=FALSE}
@@ -32,7 +33,7 @@ library(maps)
 library(rgeos) # for gSimplify
 ```
 
-After exporting the [route we took from our existing Google Map](https://www.google.com/maps/d/u/0/edit?mid=z30tQQUUfs-4.kcLP735LT47Q), we read the KML data into R. The maptools package provides a nice way to read in the coordinates from the KML file, which is all we need for this project. There is a limitation to Google Maps that only allows 11 way points, which is why there are multiple files. While you can create one big KML file in Google Maps, the `maptools::getKMLcoordinates` function will not work if there are different geometric types, e.g., lines and points, in the KML  file. For this reason, I saved each Google Map layer as a single KML file. 
+After exporting the [route we took from our existing Google Map](https://www.google.com/maps/d/u/0/edit?mid=z30tQQUUfs-4.kcLP735LT47Q), we read the KML data into R. The maptools package provides a nice way to read in the coordinates from the KML file, which is all we need for this project. There is a limitation to Google Maps that only allows 11 way points, which is why there are multiple files. You can create one big KML file in Google Maps; however, the `maptools::getKMLcoordinates` function will not work if there are different geometric types, e.g., lines and points, in the KML file. For this reason, I saved each Google Map layer as a single KML file. 
 
 The warning messages of the following code has been suppressed, but it does results in a warning that there is an "incomplete final line" in each KML file.
 
@@ -47,10 +48,7 @@ The warning messages of the following code has been suppressed, but it does resu
   names(r1) <- c('long','lat')
 ```
 
-[Google Maps]([https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf), as well as the maps package, uses longitude and latitude with the WGS84 datum; this corresponds to epsg code 4326 (`defProj`). I selected the Lambert Conformal Conic (LCC) projection for this map. This took a lot of digging and testing to figure out how to set all of the correct parameters to the Coordinate Reference System (`CRS`) function, and get a projection that looked decent for the U.S., Mexico, and Central America. The [documentation for the epsg code helped](http://www.remotesensing.org/geotiff/proj_list/lambert_conic_conformal_2sp.html), and I deferred to [other guidance](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf) for setting the parameters in the LCC projection.
-
-Second place for the projection system was the Lambert Azimuth Equal Area centered on Mexico City. That projection could be set with `myProj <- sp::CRS('+proj=laea +lat_0=19 +lon_0=-99 +x_0=False +y_0=False')`
-
+Google Maps and the maps package use [longitude and latitude with the WGS84 datum]([https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf); this corresponds to epsg code 4326 (`defProj`).  It took a little reading and more guess and test work to find a projection that looked decent for the U.S., Mexico, and Central America. Eventuallly, I selected the Lambert Conformal Conic (LCC) projection for this map. The [documentation for the epsg code](http://www.remotesensing.org/geotiff/proj_list/lambert_conic_conformal_2sp.html) lists the parameters that must be set for this projection, and I deferred to [other guidance](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf)  to determine these parameter values. These parameter values are passed to the Coordinate Reference System (`CRS`) function and assigned to `myProj` for later use in tranforming both the route and the background map to the LCC projection.
 
 ```{r}
   defProj <- sp::CRS('+init=epsg:4326') # default datum
@@ -59,9 +57,9 @@ Second place for the projection system was the Lambert Azimuth Equal Area center
   myProj <- sp::CRS('+proj=lcc +lat_1=32 +lat_2=44 +lat_0=38 +lon_0=-100 +x_0=False +y_0=False')
 ```
 
-Now that we know what projection system we are starting from, and going to, we convert the KML data into a Spatial Line. 
+The Lambert Azimuth Equal Area projection centered on Mexico City, also looked nice. The CRS code for this projection is: `sp::CRS('+proj=laea +lat_0=19 +lon_0=-99 +x_0=False +y_0=False')`
 
-It is important to simplify the line using `rgeos::gSimplify`. I think this is because the data may exist at a different frequency in the different KML files. Before I added this in, the animation appeared jerky and slow in different areas. 
+Now that we know what projection system we are starting from, and going to, we convert the KML data into a Spatial Line. 
 
 ```{r}
   # create spatial lines from the kml data
@@ -71,9 +69,11 @@ It is important to simplify the line using `rgeos::gSimplify`. I think this is b
     rgeos::gSimplify(tol = 500) # arbitrarily chosen tolerance
 ```
 
-Now, we create the background map, using the maps package. It is not clear from the help file, but the `fill = TRUE` parameter is necessary so that each of the states/countries is created as its own polygon. Without this, the `maptools::map2SpatialPolygons` will return an error.
+It is important to simplify the line using `rgeos::gSimplify`. I think this is because the data may exist at a different precision in the different KML files. Before I added this in, the animation appeared jerky and slow in different areas.
 
-After some playing around with the map, it seemed like including the entire U.S. provides the most visually appealing map, so that is what is done here. We get a map of all the states, convert it to a Spatial Polygon, and transform it to the Lambert Conic Confromal projection. Then, we follow the same steps for Mexico, and all of the countries in Central America. Finally, the two sets of polygons are combined. With this setup, a separate `<path>` element is created for each state and country.
+Now, we create the background map, using the maps package. It is not clear from the help file, but the `fill = TRUE` parameter is necessary so that each of the states/countries is created as its own polygon. Without this, `maptools::map2SpatialPolygons` will return an error.
+
+After some playing around with the map, it seemed like including the entire U.S. provides the most visually appealing map, so that is what is done here. We get a map of all the states, convert it to a Spatial Polygon, and transform it to the LCC projection. Then, we follow the same steps for Mexico, and all of the countries in Central America. Finally, the two sets of polygons are combined. With this setup, a separate `<path>` element in the SVG is created for each state and country.
   
 ```{r}  
   # now add background map of states and countries we drove through
@@ -120,7 +120,7 @@ Nothing new here, but a couple of key points:
 * It is necessary to uniformly simplify the KML data (`rgeos::gSimplify`) so that the animation will look smooth. 
 * Google Maps and the maps package use the WGS84 datum. This information can be conveyed to the sp package, for creating spatial objects, using `sp::CRS('+init=epsg:4326')`
 
-#### Find the Code
+### Find the Code
 
 The code, data, and this write up, are available on [GitHub](https://www.github.com/rabutler/animateNicaDrive). The steps described here are isolated in `createInitialSVG.R`.
 
