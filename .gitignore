@@ -3,6 +3,7 @@
 .RData
 .Rhistory
 scratch.R
+*.Rproj
 
 ex/
 
