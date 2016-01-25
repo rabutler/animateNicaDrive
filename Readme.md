@@ -6,9 +6,9 @@ Code used in a 2-part blog post detailing how to create an animated SVG of our d
 
 [Part 2 - Animating the SVG][] 
 
-* The code for Part 1 is silowed (sp) in createInitialSVG.R
+* The code for Part 1 is siloed in createInitialSVG.R
 * The code for Part 2 is in modifySVGForAnimation.R and svgModFunctions.R
-* animateNicaDriver.R is a script tying everything together
+* animateNicaDrive.R is a script tying everything together
 * makingTheMap.Rmd is the Part 1 post
 
 ## Milestones
