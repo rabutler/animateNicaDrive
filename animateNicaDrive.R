@@ -9,7 +9,7 @@ source('modifySVGForAnimation.R')
 if(FALSE) createInitialSVG()
 
 if(TRUE){ 
-  modifySVGForAnimation('driveRoute.svg', '~/rabutler.github.io/images/driveRoute.svg')
-  modifySVGForAnimation('driveRoute.svg', 'driveRoute2.svg', TRUE, animateDriveScript())
+  modifySVGForAnimation('driveRoute.svg', '~/rabutler.github.io/images/driveRouteAnimated.svg')
+  modifySVGForAnimation('driveRoute.svg', 'driveRoute_standAlone.svg', TRUE, animateDriveScript())
 }
   
