@@ -1,4 +1,4 @@
-# from source('ex/manipulate_lowCO_borders_svg.R')
+# adapted from: https://github.com/USGS-CIDA/OWDI-Lower-Colorado-Drought-Vis/blob/master/scripts/R/manipulate_lowCO_borders_svg.R
 # then I added tmpKeep and changed attrs[tmpKeep] instead of being hard coded to 'd'
 #' @param svg an open svg doc (see xml_doc <- xmlParse(svg_file, useInternalNode=TRUE))
 #' @param ele_names a character vector equal in length to the number of path elements to name
@@ -18,7 +18,7 @@ name_svg_elements <- function(svg, ele_names, keep.attrs = c('d')){
   invisible(svg)
 }
 
-# copied from ('ex/manipulate_lowCO_borders_svg.R')
+# copied from https://github.com/USGS-CIDA/OWDI-Lower-Colorado-Drought-Vis/blob/master/scripts/R/manipulate_lowCO_borders_svg.R
 add_ecmascript <- function(svg, text){
   svg_nd <- XML::xpathApply(svg, "//*[local-name()='svg']")
   
